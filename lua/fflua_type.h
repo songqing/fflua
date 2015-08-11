@@ -506,7 +506,7 @@ struct lua_op_t<char*>
 template<>
 struct lua_op_t<lua_nil_t>
 {
-    static void push_stack(lua_State* ls_, const lua_nil_t& arg_)
+    static void push_stack(lua_State* ls_, const lua_nil_t&)
     {
         lua_pushnil (ls_);
     }
@@ -516,7 +516,7 @@ struct lua_op_t<lua_nil_t>
 template<>
 struct lua_op_t<cpp_void_t>
 {
-    static int get_ret_value(lua_State* ls_, int pos_, cpp_void_t& param_)
+    static int get_ret_value(lua_State* , int , cpp_void_t& )
     {
         return 0;
     }
