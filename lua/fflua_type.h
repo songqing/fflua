@@ -38,8 +38,7 @@ using namespace std;
 
 namespace ff
 {
-//zsq
-struct MultiValues{
+struct Values {
     int num;
     string str;
     int flag;
@@ -279,27 +278,6 @@ struct basetype_ptr_traits_t<unsigned long long>
 {
     typedef unsigned long long arg_type_t;
 };
-//zsq
-template<>
-struct basetype_ptr_traits_t<MultiValues&>
-{
-    typedef MultiValues* arg_type_t;
-};
-template<>
-struct basetype_ptr_traits_t<const MultiValues&>
-{
-    typedef MultiValues* arg_type_t;
-};
-template<>
-struct basetype_ptr_traits_t<MultiValues*>
-{
-    typedef MultiValues* arg_type_t;
-};
-template<>
-struct basetype_ptr_traits_t<const MultiValues*>
-{
-    typedef MultiValues* arg_type_t;
-};
 
 template<>
 struct basetype_ptr_traits_t<float>
@@ -392,22 +370,6 @@ struct basetype_ptr_traits_t<const map<K, V> &>
 {
     typedef map<K, V> arg_type_t;
 };
-//zsq
-template<>
-struct basetype_ptr_traits_t<const map<string, MultiValues*> &>
-{
-    typedef map<string, MultiValues*> arg_type_t;
-};
-template<>
-struct basetype_ptr_traits_t<map<string, MultiValues*> &>
-{
-    typedef map<string, MultiValues*> arg_type_t;
-};
-template<>
-struct basetype_ptr_traits_t<map<string, MultiValues*> >
-{
-    typedef map<string, MultiValues*> arg_type_t;
-};
 
 //!------------------------------------------------------------------------------
 template<typename ARG_TYPE>
@@ -457,18 +419,6 @@ struct reference_traits_t<const T&>
 {
     typedef T arg_type_t;
 };
-//zsq
-template<>
-struct reference_traits_t<const MultiValues&>
-{
-    typedef MultiValues arg_type_t;
-};
-template<>
-struct reference_traits_t<const MultiValues*>
-{
-    typedef MultiValues* arg_type_t;
-};
-
 
 template<>
 struct reference_traits_t<const char*>
@@ -489,12 +439,6 @@ template <typename T>
 struct init_value_traits_t<const T*>
 {
     inline static T* value(){ return NULL; }
-};
-//zsq
-template <>
-struct init_value_traits_t<MultiValues*>
-{
-    inline static MultiValues* value(){ return NULL; }
 };
 
 template <typename T>
@@ -1366,27 +1310,27 @@ struct lua_op_t<map<K, V> >
         return 0;
     }
 };
-//zsq
+
 template<>
-struct lua_op_t<map<string, MultiValues*> >
+struct lua_op_t<map<string, Values*> >
 {
-    static void push_stack(lua_State* ls_, const map<string, MultiValues*>& arg_)
+    static void push_stack(lua_State* ls_, const map<string, Values*>& arg_)
     {
         lua_newtable(ls_);
-        typename map<string, MultiValues*>::const_iterator it = arg_.begin();
+        typename map<string, Values*>::const_iterator it = arg_.begin();
         for (; it != arg_.end(); ++it)
         {
             lua_op_t<string>::push_stack(ls_, it->first);
-            if (it->second->flag ==1 ) {
+            if (it->second->flag == 1) {
                 lua_op_t<int>::push_stack(ls_, it->second->num);
-            }else {
+            } else {
                 lua_op_t<string>::push_stack(ls_, it->second->str);
             }
             lua_settable(ls_, -3);
         }
     }
 
-    static int get_ret_value(lua_State* ls_, int pos_, map<string, MultiValues*>& param_)
+    static int get_ret_value(lua_State* ls_, int pos_, map<string, Values*>& param_)
     {
         if (0 == lua_istable(ls_, pos_))
         {
@@ -1401,10 +1345,10 @@ struct lua_op_t<map<string, MultiValues*> >
         while (lua_next(ls_, real_pos) != 0)
         {
             string key = init_value_traits_t<string>::value();
-            MultiValues* val = init_value_traits_t<MultiValues*>::value();
+            Values* val = init_value_traits_t<Values*>::value();
 
             if (lua_op_t<string>::get_ret_value(ls_, -2, key) < 0 ||
-                lua_op_t<MultiValues*>::get_ret_value(ls_, -1, val) < 0)
+                lua_op_t<Values*>::get_ret_value(ls_, -1, val) < 0)
             {
                 return -1;
             }
@@ -1414,7 +1358,7 @@ struct lua_op_t<map<string, MultiValues*> >
         return 0;
     }
 
-    static int lua_to_value(lua_State* ls_, int pos_, map<string, MultiValues*>& param_)
+    static int lua_to_value(lua_State* ls_, int pos_, map<string, Values*>& param_)
     {
         luaL_checktype(ls_, pos_, LUA_TTABLE);
 
@@ -1426,9 +1370,9 @@ struct lua_op_t<map<string, MultiValues*> >
         while (lua_next(ls_, real_pos) != 0)
         {
             string key = init_value_traits_t<string>::value();
-            MultiValues* val = init_value_traits_t<MultiValues*>::value();
+            Values* val = init_value_traits_t<Values*>::value();
             if (lua_op_t<string>::get_ret_value(ls_, -2, key) < 0 ||
-                lua_op_t<MultiValues*>::get_ret_value(ls_, -1, val) < 0)
+                lua_op_t<Values*>::get_ret_value(ls_, -1, val) < 0)
             {
                 luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
             }
