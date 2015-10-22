@@ -1,11 +1,10 @@
 ﻿#ifndef _FF_LUA_TYPE_H_
 #define _FF_LUA_TYPE_H_
 
-
-#ifndef  _WIN32
+//#ifndef  _WIN32
 #include <stdint.h>
 #define SPRINTF_F snprintf
-#else
+/*#else
 typedef  long int64_t;
 typedef  unsigned long uint64_t;
 typedef  int int32_t;
@@ -25,6 +24,7 @@ struct strtoll_tool_t
 #define strtoll strtoll_tool_t::do_strtoll
 #define strtoull (unsigned long)strtoll_tool_t::do_strtoll
 #endif
+*/
 
 #include <stdlib.h>
 #include <lua.hpp>
@@ -38,27 +38,33 @@ using namespace std;
 
 namespace ff
 {
+//zsq
+struct MultiValues{
+    int num;
+    string str;
+    int flag;
+};
 
-#define INHERIT_TABLE "inherit_table"
+const char INHERIT_TABLE[] = "inherit_table";
 
 struct cpp_void_t{};
 
 struct lua_string_tool_t
 {
-	inline static const char* c_str(const string& s_) { return s_.c_str(); }
-	inline static const char* c_str(const char* s_)   { return s_; }
+    inline static const char* c_str(const string& s_) { return s_.c_str(); }
+    inline static const char* c_str(const char* s_)   { return s_; }
 };
 
 class lua_exception_t: public exception
 {
 public:
     explicit lua_exception_t(const char* err_):
-		m_err(err_)
-	{}
+        m_err(err_)
+    {}
     explicit lua_exception_t(const string& err_):
-		m_err(err_)
-	{
-	}
+        m_err(err_)
+    {
+    }
     ~lua_exception_t() throw (){}
 
     const char* what() const throw () { return m_err.c_str(); }
@@ -96,15 +102,15 @@ public:
                 break;
                 case LUA_TTABLE:
                 {
-                	printf("table end\n");
-                     lua_pushnil(ls_);
-                     while (lua_next(ls_, i) != 0) {
-                       printf("	%s - %s\n",
-                              lua_typename(ls_, lua_type(ls_, -2)),
-                              lua_typename(ls_, lua_type(ls_, -1)));
-                       lua_pop(ls_, 1);
-                     }
-                     printf("table end");
+                    printf("table end\n");
+                    lua_pushnil(ls_);
+                    while (lua_next(ls_, i) != 0) {
+                        printf(" %s - %s\n",
+                        lua_typename(ls_, lua_type(ls_, -2)),
+                        lua_typename(ls_, lua_type(ls_, -1)));
+                        lua_pop(ls_, 1);
+                    }
+                    printf("table end");
                 }
                 break;
                 default:
@@ -124,11 +130,11 @@ public:
 
         va_list argp;
         va_start(argp, fmt);
-#ifndef _WIN32
+//#ifndef _WIN32
         vsnprintf(buff, sizeof(buff), fmt, argp);
-#else
+/*#else
         vsnprintf_s(buff, sizeof(buff), sizeof(buff), fmt, argp);
-#endif
+#endif*/
         va_end(argp);
 
         ret = buff;
@@ -146,56 +152,55 @@ class lua_nil_t{};
 template<typename T>
 struct userdata_for_object_t
 {
-    userdata_for_object_t(T* p_ = NULL): obj(p_){}
+    userdata_for_object_t(T* p_/* = NULL*/): obj(p_){}
     T* obj;
 };
-
 
 template<typename T>
 struct lua_type_info_t
 {
-	static void set_name(const string& name_, string inherit_name_ = "")
-	{
-		size_t n = name_.length() > sizeof(name) - 1? sizeof(name) - 1: name_.length();
-#ifndef _WIN32
-		::strncpy(name, name_.c_str(), n);
-#else
+    static void set_name(const string& name_, string inherit_name_/* = ""*/)
+    {
+        size_t n = name_.length() > sizeof(name) - 1? sizeof(name) - 1: name_.length();
+//#ifndef _WIN32
+        ::strncpy(name, name_.c_str(), n);
+/*#else
         ::strncpy_s(name, name_.c_str(), n);
-#endif
-		if (false == inherit_name_.empty())
-		{
-			n = inherit_name_.length() > sizeof(inherit_name) - 1? sizeof(inherit_name) - 1: inherit_name_.length();
-#ifndef _WIN32
-			::strncpy(inherit_name, inherit_name_.c_str(), n);
-#else
+#endif*/
+        if (false == inherit_name_.empty())
+        {
+            n = inherit_name_.length() > sizeof(inherit_name) - 1?
+                sizeof(inherit_name) - 1: inherit_name_.length();
+//#ifndef _WIN32
+            ::strncpy(inherit_name, inherit_name_.c_str(), n);
+/*#else
             ::strncpy_s(inherit_name, inherit_name_.c_str(), n);
-#endif
-		}
-	}
-	inline static const char* get_name()
-	{
-		return name;
-	}
-	inline static const char* get_inherit_name()
-	{
-		return inherit_name;
-	}
-	inline static bool is_registed()
-	{
-		return name[0] != '\0';
-	}
-	inline static bool is_inherit()
-	{
-		return inherit_name[0] != '\0';
-	}
-	static char name[128];
-	static char inherit_name[128];
+#endif*/
+        }
+    }
+    inline static const char* get_name()
+    {
+        return name;
+    }
+    inline static const char* get_inherit_name()
+    {
+        return inherit_name;
+    }
+    inline static bool is_registed()
+    {
+        return name[0] != '\0';
+    }
+    inline static bool is_inherit()
+    {
+        return inherit_name[0] != '\0';
+    }
+    static char name[128];
+    static char inherit_name[128];
 };
 template<typename T>
 char lua_type_info_t<T>::name[128] = {0};
 template<typename T>
 char lua_type_info_t<T>::inherit_name[128] = {0};
-
 
 template<typename ARG_TYPE>
 struct basetype_ptr_traits_t;
@@ -274,13 +279,33 @@ struct basetype_ptr_traits_t<unsigned long long>
 {
     typedef unsigned long long arg_type_t;
 };
+//zsq
+template<>
+struct basetype_ptr_traits_t<MultiValues&>
+{
+    typedef MultiValues* arg_type_t;
+};
+template<>
+struct basetype_ptr_traits_t<const MultiValues&>
+{
+    typedef MultiValues* arg_type_t;
+};
+template<>
+struct basetype_ptr_traits_t<MultiValues*>
+{
+    typedef MultiValues* arg_type_t;
+};
+template<>
+struct basetype_ptr_traits_t<const MultiValues*>
+{
+    typedef MultiValues* arg_type_t;
+};
 
 template<>
 struct basetype_ptr_traits_t<float>
 {
     typedef float arg_type_t;
 };
-
 
 template<>
 struct basetype_ptr_traits_t<double>
@@ -367,9 +392,24 @@ struct basetype_ptr_traits_t<const map<K, V> &>
 {
     typedef map<K, V> arg_type_t;
 };
+//zsq
+template<>
+struct basetype_ptr_traits_t<const map<string, MultiValues*> &>
+{
+    typedef map<string, MultiValues*> arg_type_t;
+};
+template<>
+struct basetype_ptr_traits_t<map<string, MultiValues*> &>
+{
+    typedef map<string, MultiValues*> arg_type_t;
+};
+template<>
+struct basetype_ptr_traits_t<map<string, MultiValues*> >
+{
+    typedef map<string, MultiValues*> arg_type_t;
+};
 
-
-//!-------------------------------------------------------------------------------------------------------------------------
+//!------------------------------------------------------------------------------
 template<typename ARG_TYPE>
 struct p_t;
 
@@ -385,7 +425,7 @@ struct p_t<ARG_TYPE&>
     static ARG_TYPE& r(ARG_TYPE& a) { return a;  }
     static ARG_TYPE& r(ARG_TYPE* a) { return *a; }
 };
-//!#########################################################################################################################
+//!##################################################################
 template<typename ARG_TYPE>
 struct reference_traits_t;
 
@@ -417,6 +457,18 @@ struct reference_traits_t<const T&>
 {
     typedef T arg_type_t;
 };
+//zsq
+template<>
+struct reference_traits_t<const MultiValues&>
+{
+    typedef MultiValues arg_type_t;
+};
+template<>
+struct reference_traits_t<const MultiValues*>
+{
+    typedef MultiValues* arg_type_t;
+};
+
 
 template<>
 struct reference_traits_t<const char*>
@@ -437,6 +489,12 @@ template <typename T>
 struct init_value_traits_t<const T*>
 {
     inline static T* value(){ return NULL; }
+};
+//zsq
+template <>
+struct init_value_traits_t<MultiValues*>
+{
+    inline static MultiValues* value(){ return NULL; }
 };
 
 template <typename T>
@@ -473,7 +531,6 @@ struct lua_op_t
     }*/
 };
 
-
 template<>
 struct lua_op_t<const char*>
 {
@@ -508,7 +565,7 @@ struct lua_op_t<lua_nil_t>
 {
     static void push_stack(lua_State* ls_, const lua_nil_t&)
     {
-        lua_pushnil (ls_);
+        lua_pushnil(ls_);
     }
 
 };
@@ -516,7 +573,7 @@ struct lua_op_t<lua_nil_t>
 template<>
 struct lua_op_t<cpp_void_t>
 {
-    static int get_ret_value(lua_State* , int , cpp_void_t& )
+    static int get_ret_value(lua_State*, int, cpp_void_t&)
     {
         return 0;
     }
@@ -559,10 +616,10 @@ template<> struct lua_op_t<uint64_t>
 {
     static void push_stack(lua_State* ls_, uint64_t arg_)
     {
-    	stringstream ss;
-		ss << arg_;
-		string str = ss.str();
-		lua_pushlstring(ls_, str.c_str(), str.length());
+        stringstream ss;
+        ss << arg_;
+        string str = ss.str();
+        lua_pushlstring(ls_, str.c_str(), str.length());
     }
 
     static int get_ret_value(lua_State* ls_, int pos_, uint64_t& param_)
@@ -590,133 +647,133 @@ template<> struct lua_op_t<uint64_t>
 template<> struct lua_op_t<int8_t>
 {
 
-	static void push_stack(lua_State* ls_, int8_t arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, int8_t& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (int8_t)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, int8_t& param_)
-	{
-		param_ = (int8_t)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, int8_t arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, int8_t& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (int8_t)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, int8_t& param_)
+    {
+        param_ = (int8_t)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };
 
 template<>
 struct lua_op_t<uint8_t>
 {
-	static void push_stack(lua_State* ls_, uint8_t arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, uint8_t& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (uint8_t)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, uint8_t& param_)
-	{
-		param_ = (uint8_t)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, uint8_t arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, uint8_t& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (uint8_t)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, uint8_t& param_)
+    {
+        param_ = (uint8_t)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };
 template<> struct lua_op_t<int16_t>
 {
-	static void push_stack(lua_State* ls_, int16_t arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, int16_t& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (int16_t)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, int16_t& param_)
-	{
-		param_ = (int16_t)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, int16_t arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, int16_t& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (int16_t)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, int16_t& param_)
+    {
+        param_ = (int16_t)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };
 template<> struct lua_op_t<uint16_t>
 {
 
-	static void push_stack(lua_State* ls_, uint16_t arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, uint16_t& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (uint16_t)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, uint16_t& param_)
-	{
-		param_ = (uint16_t)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, uint16_t arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, uint16_t& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (uint16_t)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, uint16_t& param_)
+    {
+        param_ = (uint16_t)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };
 template<> struct lua_op_t<int32_t>
 {
-	static void push_stack(lua_State* ls_, int32_t arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, int32_t& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (int32_t)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, int32_t& param_)
-	{
-		param_ = (int32_t)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, int32_t arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, int32_t& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (int32_t)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, int32_t& param_)
+    {
+        param_ = (int32_t)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };
 template<> struct lua_op_t<uint32_t>
 {
 
-	static void push_stack(lua_State* ls_, uint32_t arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, uint32_t& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (uint32_t)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, uint32_t& param_)
-	{
-		param_ = (uint32_t)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, uint32_t arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, uint32_t& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (uint32_t)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, uint32_t& param_)
+    {
+        param_ = (uint32_t)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };
 
 template<>
@@ -729,12 +786,12 @@ struct lua_op_t<bool>
 
     static int get_ret_value(lua_State* ls_, int pos_, bool& param_)
     {
-    	//! nil 自动转换为false
-    	if (lua_isnil(ls_, pos_))
-    	{
-    		param_ = false;
-    		return 0;
-    	}
+        //! nil 自动转换为false
+        if (lua_isnil(ls_, pos_))
+        {
+            param_ = false;
+            return 0;
+        }
         if (!lua_isboolean(ls_, pos_))
         {
             return -1;
@@ -745,7 +802,7 @@ struct lua_op_t<bool>
     }
     static int lua_to_value(lua_State* ls_, int pos_, bool& param_)
     {
-		luaL_checktype(ls_, pos_,  LUA_TBOOLEAN);
+        luaL_checktype(ls_, pos_,  LUA_TBOOLEAN);
         param_ = (0 != lua_toboolean(ls_, pos_));
         return 0;
     }
@@ -817,67 +874,67 @@ struct lua_op_t<const string&>
 };
 template<> struct lua_op_t<float>
 {
-	static void push_stack(lua_State* ls_, float arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, float& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (float)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, float& param_)
-	{
-		param_ = (float)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, float arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, float& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (float)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, float& param_)
+    {
+        param_ = (float)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };
 template<> struct lua_op_t<double>
 {
-	static void push_stack(lua_State* ls_, double arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, double& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (double)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, double& param_)
-	{
-		param_ = (double)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, double arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, double& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (double)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, double& param_)
+    {
+        param_ = (double)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };
 /*template<> struct lua_op_t<long>
 {
 
-	static void push_stack(lua_State* ls_, long arg_)
-	{
-		lua_pushnumber(ls_, (lua_Number)arg_);
-	}
-	static int get_ret_value(lua_State* ls_, int pos_, long& param_)
-	{
-		if (!lua_isnumber(ls_, pos_))
-		{
-			return -1;
-		}
-		param_ = (long)lua_tonumber(ls_, pos_);
-		return 0;
-	}
-	static int lua_to_value(lua_State* ls_, int pos_, long& param_)
-	{
-		param_ = (long)luaL_checknumber(ls_, pos_);
-		return 0;
-	}
+    static void push_stack(lua_State* ls_, long arg_)
+    {
+        lua_pushnumber(ls_, (lua_Number)arg_);
+    }
+    static int get_ret_value(lua_State* ls_, int pos_, long& param_)
+    {
+        if (!lua_isnumber(ls_, pos_))
+        {
+            return -1;
+        }
+        param_ = (long)lua_tonumber(ls_, pos_);
+        return 0;
+    }
+    static int lua_to_value(lua_State* ls_, int pos_, long& param_)
+    {
+        param_ = (long)luaL_checknumber(ls_, pos_);
+        return 0;
+    }
 };*/
 template<>
 struct lua_op_t<void*>
@@ -906,7 +963,7 @@ struct lua_op_t<void*>
     {
         if (!lua_isuserdata(ls_, pos_))
         {
-            luaL_argerror (ls_, 1, "userdata param expected");
+            luaL_argerror(ls_, 1, "userdata param expected");
             return -1;
         }
         param_ = lua_touserdata(ls_, pos_);
@@ -953,7 +1010,8 @@ struct lua_op_t<T*>
 
         if (NULL == arg_data)
         {
-            printf("expect<%s> but <%s> NULL\n", lua_type_info_t<T>::get_name(), lua_typename(ls_, lua_type(ls_, pos_)));
+            printf("expect<%s> but <%s> NULL\n",
+                        lua_type_info_t<T>::get_name(), lua_typename(ls_, lua_type(ls_, pos_)));
             return -1;
         }
 
@@ -965,18 +1023,19 @@ struct lua_op_t<T*>
         luaL_getmetatable(ls_, lua_type_info_t<T>::get_name());
         if (0 == lua_rawequal(ls_, -1, -2))
         {
-        	lua_getfield(ls_, -2, INHERIT_TABLE);
-        	if (0 == lua_rawequal(ls_, -1, -2))
-        	{
-        		printf("expect<%s> but <%s> not equal\n", lua_type_info_t<T>::get_name(), lua_typename(ls_, lua_type(ls_, pos_)));
-				lua_pop(ls_, 3);
-				return -1;
-        	}
+            lua_getfield(ls_, -2, INHERIT_TABLE);
+            if (0 == lua_rawequal(ls_, -1, -2))
+            {
+                printf("expect<%s> but <%s> not equal\n", lua_type_info_t<T>::get_name(),
+                            lua_typename(ls_, lua_type(ls_, pos_)));
+                lua_pop(ls_, 3);
+                return -1;
+            }
             lua_pop(ls_, 3);
         }
         else
         {
-        	lua_pop(ls_, 2);
+            lua_pop(ls_, 2);
         }
         T* ret_ptr = ((userdata_for_object_t<T>*)arg_data)->obj;
         if (NULL == ret_ptr)
@@ -997,31 +1056,31 @@ struct lua_op_t<T*>
         void *arg_data = lua_touserdata(ls_, pos_);
 
         if (NULL == arg_data || 0 == lua_getmetatable(ls_, pos_))
-		{
-			char buff[128];
-			SPRINTF_F(buff, sizeof(buff), "`%s` arg1 connot be null",
-										 lua_type_info_t<T>::get_name());
-			luaL_argerror(ls_, pos_, buff);
-		}
+        {
+            char buff[128];
+            SPRINTF_F(buff, sizeof(buff), "`%s` arg1 connot be null",
+                                         lua_type_info_t<T>::get_name());
+            luaL_argerror(ls_, pos_, buff);
+        }
 
-		luaL_getmetatable(ls_, lua_type_info_t<T>::get_name());
-		if (0 == lua_rawequal(ls_, -1, -2))
-		{
-			lua_getfield(ls_, -2, INHERIT_TABLE);
-			if (0 == lua_rawequal(ls_, -1, -2))
-			{
-				lua_pop(ls_, 3);
-				char buff[128];
-				SPRINTF_F(buff, sizeof(buff), "`%s` arg1 type not equal",
-											 lua_type_info_t<T>::get_name());
-				luaL_argerror(ls_, pos_, buff);
-			}
-			lua_pop(ls_, 3);
-		}
-		else
-		{
-			lua_pop(ls_, 2);
-		}
+        luaL_getmetatable(ls_, lua_type_info_t<T>::get_name());
+        if (0 == lua_rawequal(ls_, -1, -2))
+        {
+            lua_getfield(ls_, -2, INHERIT_TABLE);
+            if (0 == lua_rawequal(ls_, -1, -2))
+            {
+                lua_pop(ls_, 3);
+                char buff[128];
+                SPRINTF_F(buff, sizeof(buff), "`%s` arg1 type not equal",
+                                             lua_type_info_t<T>::get_name());
+                luaL_argerror(ls_, pos_, buff);
+            }
+            lua_pop(ls_, 3);
+        }
+        else
+        {
+            lua_pop(ls_, 2);
+        }
 
         T* ret_ptr = ((userdata_for_object_t<T>*)arg_data)->obj;
         if (NULL == ret_ptr)
@@ -1047,7 +1106,7 @@ struct lua_op_t<const T*>
 
     static int get_ret_value(lua_State* ls_, int pos_, T* & param_)
     {
-       return lua_op_t<T*>::get_ret_value(ls_, pos_, param_);
+        return lua_op_t<T*>::get_ret_value(ls_, pos_, param_);
     }
 
     static int lua_to_value(lua_State* ls_, int pos_, T*& param_)
@@ -1061,55 +1120,59 @@ struct lua_op_t<vector<T> >
 {
     static void push_stack(lua_State* ls_, const vector<T>& arg_)
     {
-    	lua_newtable(ls_);
-    	typename vector<T>::const_iterator it = arg_.begin();
-    	for (int i = 1; it != arg_.end(); ++it, ++i)
-    	{
-    		lua_op_t<int>::push_stack(ls_, i);
-    		lua_op_t<T>::push_stack(ls_, *it);
-			lua_settable(ls_, -3);
-    	}
+        lua_newtable(ls_);
+        typename vector<T>::const_iterator it = arg_.begin();
+        for (int i = 1; it != arg_.end(); ++it, ++i)
+        {
+            lua_op_t<int>::push_stack(ls_, i);
+            lua_op_t<T>::push_stack(ls_, *it);
+            lua_settable(ls_, -3);
+        }
     }
 
     static int get_ret_value(lua_State* ls_, int pos_, vector<T>& param_)
     {
-    	if (0 == lua_istable(ls_, pos_))
-    	{
-    		return -1;
-    	}
-    	lua_pushnil(ls_);
-    	int real_pos = pos_;
-    	if (pos_ < 0) real_pos = real_pos - 1;
+        if (0 == lua_istable(ls_, pos_))
+        {
+            return -1;
+        }
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        } 
 
-		while (lua_next(ls_, real_pos) != 0)
-		{
-			param_.push_back(T());
-			if (lua_op_t<T>::get_ret_value(ls_, -1, param_[param_.size() - 1]) < 0)
-			{
-				return -1;
-			}
-			lua_pop(ls_, 1);
-		}
-       return 0;
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            param_.push_back(T());
+            if (lua_op_t<T>::get_ret_value(ls_, -1, param_[param_.size() - 1]) < 0)
+            {
+                return -1;
+            }
+            lua_pop(ls_, 1);
+        }
+        return 0;
     }
 
     static int lua_to_value(lua_State* ls_, int pos_, vector<T>& param_)
     {
-    	luaL_checktype(ls_, pos_, LUA_TTABLE);
+        luaL_checktype(ls_, pos_, LUA_TTABLE);
 
-		lua_pushnil(ls_);
-    	int real_pos = pos_;
-    	if (pos_ < 0) real_pos = real_pos - 1;
-		while (lua_next(ls_, real_pos) != 0)
-		{
-			param_.push_back(T());
-			if (lua_op_t<T>::lua_to_value(ls_, -1, param_[param_.size() - 1]) < 0)
-			{
-				luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
-			}
-			lua_pop(ls_, 1);
-		}
-		return 0;
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            param_.push_back(T());
+            if (lua_op_t<T>::lua_to_value(ls_, -1, param_[param_.size() - 1]) < 0)
+            {
+                luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
+            }
+            lua_pop(ls_, 1);
+        }
+        return 0;
     }
 };
 
@@ -1118,55 +1181,59 @@ struct lua_op_t<list<T> >
 {
     static void push_stack(lua_State* ls_, const list<T>& arg_)
     {
-    	lua_newtable(ls_);
-    	typename list<T>::const_iterator it = arg_.begin();
-    	for (int i = 1; it != arg_.end(); ++it, ++i)
-    	{
-    		lua_op_t<int>::push_stack(ls_, i);
-    		lua_op_t<T>::push_stack(ls_, *it);
-			lua_settable(ls_, -3);
-    	}
+        lua_newtable(ls_);
+        typename list<T>::const_iterator it = arg_.begin();
+        for (int i = 1; it != arg_.end(); ++it, ++i)
+        {
+            lua_op_t<int>::push_stack(ls_, i);
+            lua_op_t<T>::push_stack(ls_, *it);
+            lua_settable(ls_, -3);
+        }
     }
 
     static int get_ret_value(lua_State* ls_, int pos_, list<T>& param_)
     {
-    	if (0 == lua_istable(ls_, pos_))
-    	{
-    		return -1;
-    	}
-    	lua_pushnil(ls_);
-    	int real_pos = pos_;
-    	if (pos_ < 0) real_pos = real_pos - 1;
+        if (0 == lua_istable(ls_, pos_))
+        {
+            return -1;
+        }
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
 
-		while (lua_next(ls_, real_pos) != 0)
-		{
-			param_.push_back(T());
-			if (lua_op_t<T>::get_ret_value(ls_, -1, (param_.back())) < 0)
-			{
-				return -1;
-			}
-			lua_pop(ls_, 1);
-		}
-       return 0;
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            param_.push_back(T());
+            if (lua_op_t<T>::get_ret_value(ls_, -1, (param_.back())) < 0)
+            {
+                return -1;
+            }
+            lua_pop(ls_, 1);
+        }
+        return 0;
     }
 
     static int lua_to_value(lua_State* ls_, int pos_, list<T>& param_)
     {
-    	luaL_checktype(ls_, pos_, LUA_TTABLE);
+        luaL_checktype(ls_, pos_, LUA_TTABLE);
 
-		lua_pushnil(ls_);
-    	int real_pos = pos_;
-    	if (pos_ < 0) real_pos = real_pos - 1;
-		while (lua_next(ls_, real_pos) != 0)
-		{
-			param_.push_back(T());
-			if (lua_op_t<T>::lua_to_value(ls_, -1, (param_.back())) < 0)
-			{
-				luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
-			}
-			lua_pop(ls_, 1);
-		}
-		return 0;
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            param_.push_back(T());
+            if (lua_op_t<T>::lua_to_value(ls_, -1, (param_.back())) < 0)
+            {
+                luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
+            }
+            lua_pop(ls_, 1);
+        }
+        return 0;
     }
 };
 
@@ -1175,57 +1242,61 @@ struct lua_op_t<set<T> >
 {
     static void push_stack(lua_State* ls_, const set<T>& arg_)
     {
-    	lua_newtable(ls_);
-    	typename set<T>::const_iterator it = arg_.begin();
-    	for (int i = 1; it != arg_.end(); ++it, ++i)
-    	{
-    		lua_op_t<int>::push_stack(ls_, i);
-    		lua_op_t<T>::push_stack(ls_, *it);
-			lua_settable(ls_, -3);
-    	}
+        lua_newtable(ls_);
+        typename set<T>::const_iterator it = arg_.begin();
+        for (int i = 1; it != arg_.end(); ++it, ++i)
+        {
+            lua_op_t<int>::push_stack(ls_, i);
+            lua_op_t<T>::push_stack(ls_, *it);
+            lua_settable(ls_, -3);
+        }
     }
 
     static int get_ret_value(lua_State* ls_, int pos_, set<T>& param_)
     {
-    	if (0 == lua_istable(ls_, pos_))
-    	{
-    		return -1;
-    	}
-    	lua_pushnil(ls_);
-    	int real_pos = pos_;
-    	if (pos_ < 0) real_pos = real_pos - 1;
+        if (0 == lua_istable(ls_, pos_))
+        {
+            return -1;
+        }
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
 
-		while (lua_next(ls_, real_pos) != 0)
-		{
-			T val = init_value_traits_t<T>::value();
-			if (lua_op_t<T>::get_ret_value(ls_, -1, val) < 0)
-			{
-				return -1;
-			}
-			param_.insert(val);
-			lua_pop(ls_, 1);
-		}
-       return 0;
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            T val = init_value_traits_t<T>::value();
+            if (lua_op_t<T>::get_ret_value(ls_, -1, val) < 0)
+            {
+                return -1;
+            }
+            param_.insert(val);
+            lua_pop(ls_, 1);
+        }
+        return 0;
     }
 
     static int lua_to_value(lua_State* ls_, int pos_, set<T>& param_)
     {
-    	luaL_checktype(ls_, pos_, LUA_TTABLE);
+        luaL_checktype(ls_, pos_, LUA_TTABLE);
 
-		lua_pushnil(ls_);
-    	int real_pos = pos_;
-    	if (pos_ < 0) real_pos = real_pos - 1;
-		while (lua_next(ls_, real_pos) != 0)
-		{
-			T val = init_value_traits_t<T>::value();
-			if (lua_op_t<T>::lua_to_value(ls_, -1, val) < 0)
-			{
-				luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
-			}
-			param_.insert(val);
-			lua_pop(ls_, 1);
-		}
-		return 0;
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            T val = init_value_traits_t<T>::value();
+            if (lua_op_t<T>::lua_to_value(ls_, -1, val) < 0)
+            {
+                luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
+            }
+            param_.insert(val);
+            lua_pop(ls_, 1);
+        }
+        return 0;
     }
 };
 template<typename K, typename V>
@@ -1233,62 +1304,138 @@ struct lua_op_t<map<K, V> >
 {
     static void push_stack(lua_State* ls_, const map<K, V>& arg_)
     {
-    	lua_newtable(ls_);
-    	typename map<K, V>::const_iterator it = arg_.begin();
-    	for (; it != arg_.end(); ++it)
-    	{
-    		lua_op_t<K>::push_stack(ls_, it->first);
-    		lua_op_t<V>::push_stack(ls_, it->second);
-			lua_settable(ls_, -3);
-    	}
+        lua_newtable(ls_);
+        typename map<K, V>::const_iterator it = arg_.begin();
+        for (; it != arg_.end(); ++it)
+        {
+            lua_op_t<K>::push_stack(ls_, it->first);
+            lua_op_t<V>::push_stack(ls_, it->second);
+            lua_settable(ls_, -3);
+        }
     }
 
     static int get_ret_value(lua_State* ls_, int pos_, map<K, V>& param_)
     {
-    	if (0 == lua_istable(ls_, pos_))
-    	{
-    		return -1;
-    	}
-    	lua_pushnil(ls_);
-    	int real_pos = pos_;
-    	if (pos_ < 0) real_pos = real_pos - 1;
+        if (0 == lua_istable(ls_, pos_))
+        {
+            return -1;
+        }
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
 
-		while (lua_next(ls_, real_pos) != 0)
-		{
-			K key = init_value_traits_t<K>::value();
-			V val = init_value_traits_t<V>::value();
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            K key = init_value_traits_t<K>::value();
+            V val = init_value_traits_t<V>::value();
 
-			if (lua_op_t<K>::get_ret_value(ls_, -2, key) < 0 ||
-				lua_op_t<V>::get_ret_value(ls_, -1, val) < 0)
-			{
-				return -1;
-			}
-			param_.insert(make_pair(key, val));
-			lua_pop(ls_, 1);
-		}
-       return 0;
+            if (lua_op_t<K>::get_ret_value(ls_, -2, key) < 0 ||
+                lua_op_t<V>::get_ret_value(ls_, -1, val) < 0)
+            {
+                return -1;
+            }
+            param_.insert(make_pair(key, val));
+            lua_pop(ls_, 1);
+        }
+        return 0;
     }
 
     static int lua_to_value(lua_State* ls_, int pos_, map<K, V>& param_)
     {
-    	luaL_checktype(ls_, pos_, LUA_TTABLE);
+        luaL_checktype(ls_, pos_, LUA_TTABLE);
 
-		lua_pushnil(ls_);
-    	int real_pos = pos_;
-    	if (pos_ < 0) real_pos = real_pos - 1;
-		while (lua_next(ls_, real_pos) != 0)
-		{
-			K key = init_value_traits_t<K>::value();
-			V val = init_value_traits_t<V>::value();
-			if (lua_op_t<K>::get_ret_value(ls_, -2, key) < 0 ||
-				lua_op_t<V>::get_ret_value(ls_, -1, val) < 0)
-			{
-				luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
-			}
-			param_.insert(make_pair(key, val));
-			lua_pop(ls_, 1);
-		}
-		return 0;
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            K key = init_value_traits_t<K>::value();
+            V val = init_value_traits_t<V>::value();
+            if (lua_op_t<K>::get_ret_value(ls_, -2, key) < 0 ||
+                lua_op_t<V>::get_ret_value(ls_, -1, val) < 0)
+            {
+                luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
+            }
+            param_.insert(make_pair(key, val));
+            lua_pop(ls_, 1);
+        }
+        return 0;
+    }
+};
+//zsq
+template<>
+struct lua_op_t<map<string, MultiValues*> >
+{
+    static void push_stack(lua_State* ls_, const map<string, MultiValues*>& arg_)
+    {
+        lua_newtable(ls_);
+        typename map<string, MultiValues*>::const_iterator it = arg_.begin();
+        for (; it != arg_.end(); ++it)
+        {
+            lua_op_t<string>::push_stack(ls_, it->first);
+            if (it->second->flag ==1 ) {
+                lua_op_t<int>::push_stack(ls_, it->second->num);
+            }else {
+                lua_op_t<string>::push_stack(ls_, it->second->str);
+            }
+            lua_settable(ls_, -3);
+        }
+    }
+
+    static int get_ret_value(lua_State* ls_, int pos_, map<string, MultiValues*>& param_)
+    {
+        if (0 == lua_istable(ls_, pos_))
+        {
+            return -1;
+        }
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
+
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            string key = init_value_traits_t<string>::value();
+            MultiValues* val = init_value_traits_t<MultiValues*>::value();
+
+            if (lua_op_t<string>::get_ret_value(ls_, -2, key) < 0 ||
+                lua_op_t<MultiValues*>::get_ret_value(ls_, -1, val) < 0)
+            {
+                return -1;
+            }
+            param_.insert(make_pair(key, val));
+            lua_pop(ls_, 1);
+        }
+        return 0;
+    }
+
+    static int lua_to_value(lua_State* ls_, int pos_, map<string, MultiValues*>& param_)
+    {
+        luaL_checktype(ls_, pos_, LUA_TTABLE);
+
+        lua_pushnil(ls_);
+        int real_pos = pos_;
+        if (pos_ < 0) {
+            real_pos = real_pos - 1;
+        }
+        while (lua_next(ls_, real_pos) != 0)
+        {
+            string key = init_value_traits_t<string>::value();
+            MultiValues* val = init_value_traits_t<MultiValues*>::value();
+            if (lua_op_t<string>::get_ret_value(ls_, -2, key) < 0 ||
+                lua_op_t<MultiValues*>::get_ret_value(ls_, -1, val) < 0)
+            {
+                luaL_argerror(ls_, pos_>0?pos_:-pos_, "convert to vector failed");
+            }
+            param_.insert(make_pair(key, val));
+            lua_pop(ls_, 1);
+        }
+        return 0;
     }
 };
 
